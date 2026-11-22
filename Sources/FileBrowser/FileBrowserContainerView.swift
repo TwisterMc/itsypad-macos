@@ -14,6 +14,10 @@ final class FileBrowserContainerView: NSView {
 
     var onClose: (() -> Void)?
 
+    func openFile(_ url: URL) {
+        outlineViewController.openFile(url)
+    }
+
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         setup()

@@ -26,4 +26,12 @@ final class MenuBuilderTests: XCTestCase {
         XCTAssertEqual(previousTabItem.keyEquivalent, "[")
         XCTAssertEqual(previousTabItem.keyEquivalentModifierMask, [.command, .shift])
     }
+
+    func testFolderSearchShortcut() throws {
+        let items = try XCTUnwrap(MenuBuilder(target: target).buildEditMenuItem().submenu?.items)
+        let findMenu = try XCTUnwrap(items.first { $0.submenu?.items.contains(where: { $0.action == #selector(AppDelegate.folderSearchAction) }) == true }?.submenu)
+        let item = try XCTUnwrap(findMenu.items.first { $0.action == #selector(AppDelegate.folderSearchAction) })
+        XCTAssertEqual(item.keyEquivalent, "k")
+        XCTAssertEqual(item.keyEquivalentModifierMask, [.command, .shift])
+    }
 }

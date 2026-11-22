@@ -4,6 +4,21 @@ import CloudKit
 
 final class CloudSyncEngineTests: XCTestCase {
 
+    func testCloudKitRequiresServiceAndExpectedContainerEntitlements() {
+        let container = "iCloud.com.nickustinov.itsypad"
+        XCTAssertTrue(CloudSyncEngine.supportsCloudKit(services: ["CloudKit"], containers: [container]))
+        XCTAssertFalse(CloudSyncEngine.supportsCloudKit(services: nil, containers: [container]))
+        XCTAssertFalse(CloudSyncEngine.supportsCloudKit(services: ["CloudKit"], containers: nil))
+        XCTAssertFalse(CloudSyncEngine.supportsCloudKit(services: ["CloudKit"], containers: ["iCloud.example.other"]))
+        XCTAssertFalse(CloudSyncEngine.supportsCloudKit(services: ["CloudKit-Anonymous"], containers: [container]))
+    }
+
+    func testStartingWithoutEntitlementsDoesNotCreateCloudKitContainer() throws {
+        try XCTSkipIf(CloudSyncEngine.isCloudKitAvailable, "This test requires an unsigned or unentitled test process")
+        try XCTSkipIf(ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil, "The test-host guard would bypass the entitlement check")
+        CloudSyncEngine.shared.start()
+    }
+
     // MARK: - CloudTabRecord
 
     func testCloudTabRecordHoldsAllFields() {

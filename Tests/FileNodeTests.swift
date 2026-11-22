@@ -59,4 +59,28 @@ final class FileNodeTests: XCTestCase {
         let sorted = FileNode.sorted(nodes)
         XCTAssertEqual(sorted.map(\.name), ["apple", "Zebra"])
     }
+
+    func testFolderSearchIncludesNestedFilesAndRespectsSidebarExclusions() throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        for directory in ["notes", "node_modules", ".hidden"] {
+            try FileManager.default.createDirectory(at: root.appendingPathComponent(directory), withIntermediateDirectories: true)
+        }
+        for path in ["notes/Todo.md", "notes/other.txt", "node_modules/todo.txt", ".hidden/todo.txt", "Todo.txt"] {
+            try Data().write(to: root.appendingPathComponent(path))
+        }
+        try FileManager.default.createSymbolicLink(at: root.appendingPathComponent("linked-notes"), withDestinationURL: root.appendingPathComponent("notes"))
+
+        let files = try FolderFileSearch.files(in: root)
+        XCTAssertEqual(Set(files.map { FolderFileSearch.relativePath(of: $0, in: root) }), Set(["notes/Todo.md", "notes/other.txt", "Todo.txt"]))
+        XCTAssertEqual(FolderFileSearch.matches(query: " TODO ", files: files, root: root).count, 2)
+        XCTAssertEqual(FolderFileSearch.matches(query: "notes/other", files: files, root: root).map(\.lastPathComponent), ["other.txt"])
+        XCTAssertTrue(FolderFileSearch.matches(query: "  ", files: files, root: root).isEmpty)
+    }
+
+    func testFolderSearchReportsMissingRoot() {
+        let missing = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        XCTAssertThrowsError(try FolderFileSearch.files(in: missing))
+    }
 }

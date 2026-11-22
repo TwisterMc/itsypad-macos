@@ -89,7 +89,7 @@ final class SettingsStoreTests: XCTestCase {
     }
 
     func testDefaultIcloudSync() {
-        XCTAssertTrue(store.icloudSync)
+        XCTAssertEqual(store.icloudSync, CloudSyncEngine.isCloudKitAvailable)
     }
 
     func testDefaultClipboardViewMode() {

@@ -1,5 +1,6 @@
 import CloudKit
 import Foundation
+import Security
 import os.log
 
 struct CloudTabRecord {
@@ -73,8 +74,11 @@ final class CloudSyncEngine: @unchecked Sendable {
         dispatchPrecondition(condition: .onQueue(.main))
         guard syncEngine == nil else { return }
 
-        // CKContainer traps if CloudKit entitlement is missing (e.g. in unit tests)
-        guard Self.hasCloudKitEntitlement else { return }
+        guard ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil else { return }
+        guard Self.isCloudKitAvailable else {
+            logger.error("iCloud sync is unavailable: this build lacks the required CloudKit entitlements")
+            return
+        }
 
         if container == nil {
             let ckContainer = CKContainer(identifier: Self.containerID)
@@ -549,7 +553,14 @@ extension CloudSyncEngine: CKSyncEngineDelegate {
         try? FileManager.default.removeItem(at: stateURL)
     }
 
-    private static let hasCloudKitEntitlement: Bool = {
-        return ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil
+    static func supportsCloudKit(services: [String]?, containers: [String]?) -> Bool {
+        services?.contains("CloudKit") == true && containers?.contains(containerID) == true
+    }
+
+    static let isCloudKitAvailable: Bool = {
+        guard let task = SecTaskCreateFromSelf(nil) else { return false }
+        let services = SecTaskCopyValueForEntitlement(task, "com.apple.developer.icloud-services" as CFString, nil) as? [String]
+        let containers = SecTaskCopyValueForEntitlement(task, "com.apple.developer.icloud-container-identifiers" as CFString, nil) as? [String]
+        return supportsCloudKit(services: services, containers: containers)
     }()
 }

@@ -77,12 +77,15 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation, NSTool
     private var pendingFileURLs: [URL] = []
     private var tabSwitchMonitor: Any?
     private var globalSearchController: GlobalSearchController?
+    private var folderSearchController: GlobalSearchController?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         // CKSyncEngine listens for CloudKit silent pushes itself, but the app
         // must register with APNs or no pushes are delivered at all – without
         // this the Mac only learns about remote changes at launch.
-        NSApplication.shared.registerForRemoteNotifications()
+        if CloudSyncEngine.isCloudKitAvailable {
+            NSApplication.shared.registerForRemoteNotifications()
+        }
 
         setupStatusItem()
         setupEditorWindow()
@@ -803,6 +806,26 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation, NSTool
         controller.toggle(over: window)
     }
 
+    @objc func folderSearchAction() {
+        guard let window = editorWindow, let root = FileTreeStore.shared.rootURL else { return }
+        let controller: GlobalSearchController
+        if let existing = folderSearchController {
+            controller = existing
+        } else {
+            controller = GlobalSearchController()
+            folderSearchController = controller
+        }
+        // The folder may have changed since the controller was created.
+        controller.onOpenFile = { [weak self] url in
+            guard FileTreeStore.shared.rootURL == root else {
+                NSLog("[FolderSearch] The open folder changed before the file was selected")
+                return
+            }
+            self?.fileBrowserSplitVC?.openFile(url)
+        }
+        controller.toggleFolderSearch(over: window, root: root)
+    }
+
     // MARK: - NSMenuDelegate
 
     func menuNeedsUpdate(_ menu: NSMenu) {
@@ -872,6 +895,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation, NSTool
         }
         if menuItem.action == #selector(toggleFileBrowser) {
             menuItem.state = fileBrowserSplitVC?.isSidebarVisible == true ? .on : .off
+        }
+        if menuItem.action == #selector(folderSearchAction) {
+            return editorWindow?.isVisible == true && FileTreeStore.shared.rootURL != nil
         }
         if menuItem.action == #selector(togglePreviewAction) {
             let isMarkdown = editorCoordinator?.isCurrentTabMarkdown ?? false

@@ -109,13 +109,18 @@ struct GeneralSettingsView: View {
                 }
                 VStack(alignment: .leading, spacing: 4) {
                     Toggle(String(localized: "settings.general.icloud_sync", defaultValue: "iCloud sync"), isOn: Binding(
-                        get: { store.icloudSync },
+                        get: { store.icloudSync && CloudSyncEngine.isCloudKitAvailable },
                         set: { store.setICloudSync($0) }
                     ))
+                    .disabled(!CloudSyncEngine.isCloudKitAvailable)
                     Text(String(localized: "settings.general.icloud_sync_description", defaultValue: "Syncs scratch tabs and clipboard history (text only) across devices. File-backed tabs are not synced."))
                         .font(.footnote)
                         .foregroundStyle(.secondary)
-                    if store.icloudSync {
+                    if !CloudSyncEngine.isCloudKitAvailable {
+                        Text(String(localized: "settings.general.icloud_sync_unavailable", defaultValue: "iCloud sync is unavailable in this build because it is not signed for the Itsypad iCloud container."))
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                    } else if store.icloudSync {
                         Text(lastSyncLabel)
                             .font(.footnote)
                             .foregroundStyle(.tertiary)

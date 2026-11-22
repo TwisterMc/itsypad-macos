@@ -184,10 +184,16 @@ final class FileBrowserOutlineView: NSViewController, NSOutlineViewDataSource, N
             } else {
                 outlineView.expandItem(node)
             }
-        } else if Self.isTextFile(node.url) {
-            onFileSelected?(node.url)
         } else {
-            NSWorkspace.shared.open(node.url)
+            openFile(node.url)
+        }
+    }
+
+    func openFile(_ url: URL) {
+        if Self.isTextFile(url) {
+            onFileSelected?(url)
+        } else {
+            NSWorkspace.shared.open(url)
         }
     }
 

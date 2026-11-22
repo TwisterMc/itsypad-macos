@@ -16,6 +16,8 @@ open itsypad.xcodeproj
 
 Requires macOS 14+, Xcode 16+ and [XcodeGen](https://github.com/yonaskolb/XcodeGen). Run `xcodegen generate` again after changing `project.yml` or adding/removing source files.
 
+Choose the `itsypad-local` scheme to run an ad-hoc signed app without the release signing credentials or iCloud sync. The Swift package executable is unsandboxed and uses the legacy application-support directory.
+
 ## Rules
 
 1. **Tests pass and new logic is tested.** Run the full suite (`xcodebuild -scheme itsypad -configuration Debug test` or ⌘U) before opening a PR. Bug fixes include a regression test; new behaviour includes coverage.

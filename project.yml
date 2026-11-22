@@ -9,6 +9,7 @@ options:
 
 configs:
   Debug: debug
+  Debug-Local: debug
   Debug-AppStore: debug
   Release: release
   Release-AppStore: release
@@ -24,6 +25,17 @@ packages:
     path: Packages/Bonsplit
 
 schemes:
+  itsypad-local:
+    build:
+      targets:
+        itsypad: all
+        ItsypadTests: [test]
+    run:
+      config: Debug-Local
+    test:
+      config: Debug-Local
+      targets:
+        - ItsypadTests
   itsypad:
     build:
       targets:
@@ -58,7 +70,10 @@ targets:
           - Info.plist
           - itsypad.entitlements
           - itsypad-direct.entitlements
+          - itsypad-local.entitlements
       - path: Executable
+        excludes:
+          - PackageInfo.plist
     dependencies:
       - package: Bonsplit
         product: Bonsplit
@@ -98,6 +113,12 @@ targets:
         INFOPLIST_KEY_CFBundleDisplayName: Itsypad
         INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.productivity
       configs:
+        Debug-Local:
+          PRODUCT_BUNDLE_IDENTIFIER: local.itsypad.development
+          CODE_SIGN_STYLE: Manual
+          CODE_SIGN_IDENTITY: "-"
+          DEVELOPMENT_TEAM: ""
+          CODE_SIGN_ENTITLEMENTS: Sources/itsypad-local.entitlements
         Debug:
           CODE_SIGN_ENTITLEMENTS: Sources/itsypad-direct.entitlements
         Release:

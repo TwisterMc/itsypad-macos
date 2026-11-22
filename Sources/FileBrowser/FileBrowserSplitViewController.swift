@@ -59,6 +59,10 @@ final class FileBrowserSplitViewController: NSSplitViewController {
         set { fileBrowserContainer.onFileSelected = newValue }
     }
 
+    func openFile(_ url: URL) {
+        fileBrowserContainer.openFile(url)
+    }
+
     func toggleSidebar() {
         NSAnimationContext.runAnimationGroup { context in
             context.duration = 0.2

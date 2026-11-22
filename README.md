@@ -33,6 +33,7 @@ A tiny, fast scratchpad and clipboard manager for Mac. [itsypad.app](https://its
 - **Multi-tab and split view** — work on multiple files/notes at once, drag to reorder, pin tabs to keep them visible (tab bar by [Bonsplit](https://github.com/almonk/bonsplit))
 - **Syntax highlighting** — 185+ languages via [highlight.js](https://highlightjs.org), with automatic language detection
 - **Find and replace** — built-in find bar with next/previous match and use selection for find
+- **File browser** — browse a folder in the sidebar and search its files and subfolders by name or path with ⇧⌘K (hidden items, excluded folders and symbolic links are skipped)
 - **Session persistence** — all tabs, content, and cursor positions are preserved across restarts
 - **Auto-save** — content is continuously saved to session, never lose your work
 - **Markdown preview** — side-by-side rendered preview for `.md` tabs (⇧⌘P), live-updates as you type, themed code blocks, local images
@@ -194,6 +195,7 @@ Both versions use the same CloudKit container (`iCloud.com.nickustinov.itsypad`)
 
 - **Direct/DMG:** Signed with "Developer ID Application" certificate and a Developer ID provisioning profile. The build script (`scripts/build-release.sh`) archives unsigned, embeds the profile, then manually signs with resolved entitlements (Xcode variables like `$(TeamIdentifierPrefix)` are expanded to literal values).
 - **App Store:** Signed automatically by Xcode with the App Store provisioning profile. Uploaded via Xcode Organizer or `xcodebuild -exportArchive`.
+- **Local development:** The `itsypad-local` scheme uses an ad-hoc signature, a separate app identity and no CloudKit entitlements. iCloud sync is unavailable in this build. The release schemes and their signing are unchanged.
 
 ### iCloud sync
 
@@ -295,13 +297,15 @@ xcodegen generate
 open itsypad.xcodeproj
 ```
 
-Then build and run with ⌘R in Xcode. Tests run with ⌘U.
+Select the **itsypad-local** scheme, then build and run with ⌘R in Xcode. Tests run with ⌘U. This builds a sandboxed app with a separate local data container and does not require the original developer's signing credentials.
+
+The Swift package can also be run directly, but it is not sandboxed and uses the legacy application-support directory rather than the local app's separate container. Run package tests with `swift test`.
 
 ## Releasing
 
 ### Both versions
 
-1. Bump `MARKETING_VERSION` and `CURRENT_PROJECT_VERSION` in `project.yml`
+1. Bump `MARKETING_VERSION` and `CURRENT_PROJECT_VERSION` in `project.yml` and the corresponding versions in `Executable/PackageInfo.plist`
 2. Run `xcodegen generate`
 
 ### Direct/DMG release
